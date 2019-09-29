@@ -76,6 +76,7 @@ CREATE TABLE Hotel
 (
     id                   INT NOT NULL ,
     City_id              INT NOT NULL ,
+    Name                 CHAR(18) NOT NULL ,
     Address              CHAR(18) NULL ,
     Stars                INTEGER NULL  CONSTRAINT  HotelStarsConstraint CHECK (Stars IN (1, 2, 3, 4, 5)),
     Transfer_Cost        DECIMAL(19,4) NOT NULL  CONSTRAINT  TransferCostConstraint CHECK (Transfer_Cost >= 0)

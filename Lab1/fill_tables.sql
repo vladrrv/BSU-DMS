@@ -25,16 +25,16 @@ INTO CITY (ID, Name, Country_id) VALUES ('10', 'Warsaw', '9')
 SELECT 1 FROM DUAL;
 
 INSERT ALL
-INTO HOTEL (ID, City_id, Address, Stars, Transfer_Cost) VALUES ('1', '1', '25 Some Str', '5', '15')
-INTO HOTEL (ID, City_id, Address, Stars, Transfer_Cost) VALUES ('2', '1', '14 Some Str', '3', '10')
-INTO HOTEL (ID, City_id, Address, Stars, Transfer_Cost) VALUES ('3', '2', '44 Another Str', '4', '5')
-INTO HOTEL (ID, City_id, Address, Stars, Transfer_Cost) VALUES ('4', '2', '103 Another Str', '4', '7')
-INTO HOTEL (ID, City_id, Address, Stars, Transfer_Cost) VALUES ('5', '3', '11 Cool Str', '2', '4')
-INTO HOTEL (ID, City_id, Address, Stars, Transfer_Cost) VALUES ('6', '3', '5 Weird Str', '5', '14')
-INTO HOTEL (ID, City_id, Address, Stars, Transfer_Cost) VALUES ('7', '4', '77 Cold Str', '3', '8')
-INTO HOTEL (ID, City_id, Address, Stars, Transfer_Cost) VALUES ('8', '4', '55 Bear Str', '3', '5')
-INTO HOTEL (ID, City_id, Address, Stars, Transfer_Cost) VALUES ('9', '5', '8 Strange Str', '5', '12')
-INTO HOTEL (ID, City_id, Address, Stars, Transfer_Cost) VALUES ('10', '5', '1 Creepy Str', '5', '10')
+INTO HOTEL (ID, City_id, Name, Address, Stars, Transfer_Cost) VALUES ('1', '1', 'Zvyazda', '25 Some Str', '5', '15')
+INTO HOTEL (ID, City_id, Name, Address, Stars, Transfer_Cost) VALUES ('2', '1', 'Evropa', '14 Some Str', '3', '10')
+INTO HOTEL (ID, City_id, Name, Address, Stars, Transfer_Cost) VALUES ('3', '2', 'Moooo', '44 Another Str', '4', '5')
+INTO HOTEL (ID, City_id, Name, Address, Stars, Transfer_Cost) VALUES ('4', '2', 'Tokio', '103 Another Str', '4', '7')
+INTO HOTEL (ID, City_id, Name, Address, Stars, Transfer_Cost) VALUES ('5', '3', 'Minsk', '11 Cool Str', '2', '4')
+INTO HOTEL (ID, City_id, Name, Address, Stars, Transfer_Cost) VALUES ('6', '3', 'Happy', '5 Weird Str', '5', '14')
+INTO HOTEL (ID, City_id, Name, Address, Stars, Transfer_Cost) VALUES ('7', '4', 'Random', '77 Cold Str', '3', '8')
+INTO HOTEL (ID, City_id, Name, Address, Stars, Transfer_Cost) VALUES ('8', '4', 'OMG', '55 Bear Str', '3', '5')
+INTO HOTEL (ID, City_id, Name, Address, Stars, Transfer_Cost) VALUES ('9', '5', 'Blah-Blah', '8 Strange Str', '5', '12')
+INTO HOTEL (ID, City_id, Name, Address, Stars, Transfer_Cost) VALUES ('10', '5', 'SomeName', '1 Creepy Str', '5', '10')
 SELECT 1 FROM DUAL;
 
 INSERT INTO CUSTOMER (ID, NAME, PASSPORT) VALUES ('1', 'Ivanov', 'MP1234567');
@@ -94,13 +94,13 @@ INSERT INTO TOUR (ID, COUNTRY_ID, TYPE, START_DATE, END_DATE) VALUES ('8', '4', 
 INSERT INTO TOUR (ID, COUNTRY_ID, TYPE, START_DATE, END_DATE) VALUES ('9', '4', 'trip', TO_DATE('11.01.2020', 'DD.MM.YY'), TO_DATE('19.01.2020', 'DD.MM.YY'));
 INSERT INTO TOUR (ID, COUNTRY_ID, TYPE, START_DATE, END_DATE) VALUES ('10', '4', 'fish', TO_DATE('11.01.2020', 'DD.MM.YY'), TO_DATE('19.01.2020', 'DD.MM.YY'));
 
-INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_INSURANCE) VALUES ('1', '1', '1', '2', '2');
-INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID) VALUES ('2', '2', '2');
-INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA) VALUES ('3', '2', '4', '1');
-INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID) VALUES ('4', '4', '3');
-INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_INSURANCE, NEED_TRANSFER) VALUES ('5', '4', '1', '4', '4', '4');
-INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID) VALUES ('6', '5', '8');
-INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_INSURANCE) VALUES ('7', '6', '10', '1');
-INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID) VALUES ('8', '7', '8');
-INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_TRANSFER) VALUES ('9', '8', '8', '5');
-INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER) VALUES ('10', '10', '1', '1', '1');
+INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER, NEED_INSURANCE) VALUES ('1', '1', '1', '2', '0', '2');
+INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER, NEED_INSURANCE) VALUES ('2', '2', '2', '0', '0', '0');
+INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER, NEED_INSURANCE) VALUES ('3', '2', '4', '1', '0', '0');
+INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER, NEED_INSURANCE) VALUES ('4', '4', '3', '0', '0', '0');
+INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER, NEED_INSURANCE) VALUES ('5', '4', '1', '4', '4', '4');
+INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER, NEED_INSURANCE) VALUES ('6', '5', '8', '0', '0', '0');
+INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER, NEED_INSURANCE) VALUES ('7', '6', '10', '0', '0', '1');
+INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER, NEED_INSURANCE) VALUES ('8', '7', '8', '0', '0', '0');
+INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER, NEED_INSURANCE) VALUES ('9', '8', '8', '0', '5', '0');
+INSERT INTO TOURENROLLMENT (ID, CUSTOMER_ID, TOUR_ID, NEED_VISA, NEED_TRANSFER, NEED_INSURANCE) VALUES ('10', '10', '1', '1', '1', '0');
