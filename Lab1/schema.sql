@@ -5,17 +5,17 @@ DROP TABLE Hotel CASCADE CONSTRAINTS PURGE;
 
 DROP TABLE Seat CASCADE CONSTRAINTS PURGE;
 
-DROP TABLE Flight CASCADE CONSTRAINTS PURGE;
-
-DROP TABLE City CASCADE CONSTRAINTS PURGE;
-
 DROP TABLE TourEnrollment CASCADE CONSTRAINTS PURGE;
 
 DROP TABLE Tour CASCADE CONSTRAINTS PURGE;
 
-DROP TABLE Country CASCADE CONSTRAINTS PURGE;
-
 DROP TABLE Customer CASCADE CONSTRAINTS PURGE;
+
+DROP TABLE Flight CASCADE CONSTRAINTS PURGE;
+
+DROP TABLE City CASCADE CONSTRAINTS PURGE;
+
+DROP TABLE Country CASCADE CONSTRAINTS PURGE;
 
 CREATE TABLE City
 (
@@ -89,35 +89,6 @@ CREATE UNIQUE INDEX XPKHotel ON Hotel
 ALTER TABLE Hotel
     ADD CONSTRAINT  XPKHotel PRIMARY KEY (id);
 
-CREATE TABLE Room
-(
-    id                   INT NOT NULL ,
-    Hotel_id             INT NOT NULL ,
-    Type                 CHAR(18) NULL  CONSTRAINT  RoomTypeConstraint CHECK (Type IN ('single', 'double', 'triple', 'quad', 'queen', 'king')),
-    Living_Cost          DECIMAL(19,4) NOT NULL  CONSTRAINT  CostConstraint2 CHECK (Living_Cost >= 0),
-    Customer_id          INT NULL
-);
-
-CREATE UNIQUE INDEX XPKRoom ON Room
-    (id   ASC,Hotel_id   ASC);
-
-ALTER TABLE Room
-    ADD CONSTRAINT  XPKRoom PRIMARY KEY (id,Hotel_id);
-
-CREATE TABLE Seat
-(
-    id                   INT NOT NULL ,
-    Flight_id            INT NOT NULL ,
-    Customer_id          INT NULL ,
-    Cost                 DECIMAL(19,4) NOT NULL  CONSTRAINT  CostConstraint CHECK (Cost >= 0)
-);
-
-CREATE UNIQUE INDEX XPKSeat ON Seat
-    (id   ASC,Flight_id   ASC);
-
-ALTER TABLE Seat
-    ADD CONSTRAINT  XPKSeat PRIMARY KEY (id,Flight_id);
-
 CREATE TABLE Tour
 (
     id                   INT NOT NULL ,
@@ -136,13 +107,13 @@ ALTER TABLE Tour
 
 CREATE TABLE TourEnrollment
 (
+    id                   INT NOT NULL ,
     Customer_id          INT NOT NULL ,
     Tour_id              INT NOT NULL ,
     Need_Visa            SMALLINT NULL ,
     Need_Transfer        SMALLINT NULL ,
     Need_Insurance       SMALLINT NULL ,
-    id                   INT NOT NULL ,
-    Cost                 DECIMAL(19,4) NOT NULL
+    Cost                 DECIMAL(19,4) NULL
 );
 
 CREATE UNIQUE INDEX XPKTourEnrollment ON TourEnrollment
@@ -150,6 +121,35 @@ CREATE UNIQUE INDEX XPKTourEnrollment ON TourEnrollment
 
 ALTER TABLE TourEnrollment
     ADD CONSTRAINT  XPKTourEnrollment PRIMARY KEY (id);
+
+CREATE TABLE Room
+(
+    id                   INT NOT NULL ,
+    Hotel_id             INT NOT NULL ,
+    Type                 CHAR(18) NULL  CONSTRAINT  RoomTypeConstraint CHECK (Type IN ('single', 'double', 'triple', 'quad', 'queen', 'king')),
+    Living_Cost          DECIMAL(19,4) NOT NULL  CONSTRAINT  CostConstraint2 CHECK (Living_Cost >= 0),
+    TE_id                INT NULL
+);
+
+CREATE UNIQUE INDEX XPKRoom ON Room
+    (id   ASC,Hotel_id   ASC);
+
+ALTER TABLE Room
+    ADD CONSTRAINT  XPKRoom PRIMARY KEY (id,Hotel_id);
+
+CREATE TABLE Seat
+(
+    id                   INT NOT NULL ,
+    Flight_id            INT NOT NULL ,
+    Cost                 DECIMAL(19,4) NOT NULL  CONSTRAINT  CostConstraint CHECK (Cost >= 0),
+    TE_id                INT NULL
+);
+
+CREATE UNIQUE INDEX XPKSeat ON Seat
+    (id   ASC,Flight_id   ASC);
+
+ALTER TABLE Seat
+    ADD CONSTRAINT  XPKSeat PRIMARY KEY (id,Flight_id);
 
 ALTER TABLE City
     ADD (CONSTRAINT R_8 FOREIGN KEY (Country_id) REFERENCES Country (id));
@@ -160,18 +160,6 @@ ALTER TABLE Flight
 ALTER TABLE Hotel
     ADD (CONSTRAINT R_9 FOREIGN KEY (City_id) REFERENCES City (id));
 
-ALTER TABLE Room
-    ADD (CONSTRAINT R_10 FOREIGN KEY (Hotel_id) REFERENCES Hotel (id));
-
-ALTER TABLE Room
-    ADD (CONSTRAINT R_13 FOREIGN KEY (Customer_id) REFERENCES Customer (id) ON DELETE SET NULL);
-
-ALTER TABLE Seat
-    ADD (CONSTRAINT R_11 FOREIGN KEY (Flight_id) REFERENCES Flight (id));
-
-ALTER TABLE Seat
-    ADD (CONSTRAINT R_12 FOREIGN KEY (Customer_id) REFERENCES Customer (id) ON DELETE SET NULL);
-
 ALTER TABLE Tour
     ADD (CONSTRAINT R_16 FOREIGN KEY (Country_id) REFERENCES Country (id));
 
@@ -180,6 +168,18 @@ ALTER TABLE TourEnrollment
 
 ALTER TABLE TourEnrollment
     ADD (CONSTRAINT R_21 FOREIGN KEY (Tour_id) REFERENCES Tour (id));
+
+ALTER TABLE Room
+    ADD (CONSTRAINT R_10 FOREIGN KEY (Hotel_id) REFERENCES Hotel (id));
+
+ALTER TABLE Room
+    ADD (CONSTRAINT R_11 FOREIGN KEY (TE_id) REFERENCES TourEnrollment (id) ON DELETE SET NULL);
+
+ALTER TABLE Seat
+    ADD (CONSTRAINT R_12 FOREIGN KEY (Flight_id) REFERENCES Flight (id));
+
+ALTER TABLE Seat
+    ADD (CONSTRAINT R_13 FOREIGN KEY (TE_id) REFERENCES TourEnrollment (id) ON DELETE SET NULL);
 
 CREATE  TRIGGER  tD_City AFTER DELETE ON City for each row
     -- erwin Builtin Trigger
@@ -458,7 +458,7 @@ DECLARE NUMROWS INTEGER;
 BEGIN
     /* erwin Builtin Trigger */
     /* Customer  TourEnrollment on parent delete restrict */
-    /* ERWIN_RELATION:CHECKSUM="000264f3", PARENT_OWNER="", PARENT_TABLE="Customer"
+    /* ERWIN_RELATION:CHECKSUM="0000e7d0", PARENT_OWNER="", PARENT_TABLE="Customer"
     CHILD_OWNER="", CHILD_TABLE="TourEnrollment"
     P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
     FK_CONSTRAINT="R_20", FK_COLUMNS="Customer_id" */
@@ -475,34 +475,6 @@ BEGIN
             );
     END IF;
 
-    /* erwin Builtin Trigger */
-    /* Customer Book Room on parent delete set null */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Customer"
-    CHILD_OWNER="", CHILD_TABLE="Room"
-    P2C_VERB_PHRASE="Book", C2P_VERB_PHRASE="",
-    FK_CONSTRAINT="R_13", FK_COLUMNS="Customer_id" */
-    UPDATE Room
-    SET
-        /* %SetFK(Room,NULL) */
-        Room.Customer_id = NULL
-    WHERE
-        /* %JoinFKPK(Room,:%Old," = "," AND") */
-            Room.Customer_id = :old.id;
-
-    /* erwin Builtin Trigger */
-    /* Customer Book Seat on parent delete set null */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Customer"
-    CHILD_OWNER="", CHILD_TABLE="Seat"
-    P2C_VERB_PHRASE="Book", C2P_VERB_PHRASE="",
-    FK_CONSTRAINT="R_12", FK_COLUMNS="Customer_id" */
-    UPDATE Seat
-    SET
-        /* %SetFK(Seat,NULL) */
-        Seat.Customer_id = NULL
-    WHERE
-        /* %JoinFKPK(Seat,:%Old," = "," AND") */
-            Seat.Customer_id = :old.id;
-
 
 -- erwin Builtin Trigger
 END;
@@ -515,7 +487,7 @@ DECLARE NUMROWS INTEGER;
 BEGIN
     /* erwin Builtin Trigger */
     /* Customer  TourEnrollment on parent update restrict */
-    /* ERWIN_RELATION:CHECKSUM="0002b062", PARENT_OWNER="", PARENT_TABLE="Customer"
+    /* ERWIN_RELATION:CHECKSUM="00010814", PARENT_OWNER="", PARENT_TABLE="Customer"
       CHILD_OWNER="", CHILD_TABLE="TourEnrollment"
       P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
       FK_CONSTRAINT="R_20", FK_COLUMNS="Customer_id" */
@@ -535,42 +507,6 @@ BEGIN
                     'Cannot update Customer because TourEnrollment exists.'
                 );
         END IF;
-    END IF;
-
-    /* Customer Book Room on parent update set null */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Customer"
-      CHILD_OWNER="", CHILD_TABLE="Room"
-      P2C_VERB_PHRASE="Book", C2P_VERB_PHRASE="",
-      FK_CONSTRAINT="R_13", FK_COLUMNS="Customer_id" */
-    IF
-        /* %JoinPKPK(:%Old,:%New," <> "," OR ") */
-            :old.id <> :new.id
-    THEN
-        UPDATE Room
-        SET
-            /* %SetFK(Room,NULL) */
-            Room.Customer_id = NULL
-        WHERE
-            /* %JoinFKPK(Room,:%Old," = ",",") */
-                Room.Customer_id = :old.id;
-    END IF;
-
-    /* Customer Book Seat on parent update set null */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Customer"
-      CHILD_OWNER="", CHILD_TABLE="Seat"
-      P2C_VERB_PHRASE="Book", C2P_VERB_PHRASE="",
-      FK_CONSTRAINT="R_12", FK_COLUMNS="Customer_id" */
-    IF
-        /* %JoinPKPK(:%Old,:%New," <> "," OR ") */
-            :old.id <> :new.id
-    THEN
-        UPDATE Seat
-        SET
-            /* %SetFK(Seat,NULL) */
-            Seat.Customer_id = NULL
-        WHERE
-            /* %JoinFKPK(Seat,:%Old," = ",",") */
-                Seat.Customer_id = :old.id;
     END IF;
 
 
@@ -819,200 +755,6 @@ END;
 /
 
 
-CREATE  TRIGGER tI_Room BEFORE INSERT ON Room for each row
-    -- erwin Builtin Trigger
--- INSERT trigger on Room
-DECLARE NUMROWS INTEGER;
-BEGIN
-    /* erwin Builtin Trigger */
-    /* Customer Book Room on child insert set null */
-    /* ERWIN_RELATION:CHECKSUM="0001dec4", PARENT_OWNER="", PARENT_TABLE="Customer"
-    CHILD_OWNER="", CHILD_TABLE="Room"
-    P2C_VERB_PHRASE="Book", C2P_VERB_PHRASE="",
-    FK_CONSTRAINT="R_13", FK_COLUMNS="Customer_id" */
-    UPDATE Room
-    SET
-        /* %SetFK(Room,NULL) */
-        Room.Customer_id = NULL
-    WHERE
-        NOT EXISTS (
-                SELECT * FROM Customer
-                WHERE
-                    /* %JoinFKPK(:%New,Customer," = "," AND") */
-                        :new.Customer_id = Customer.id
-            )
-        /* %JoinPKPK(Room,:%New," = "," AND") */
-      and Room.id = :new.id AND
-            Room.Hotel_id = :new.Hotel_id;
-
-    /* erwin Builtin Trigger */
-    /* Hotel Have Room on child insert restrict */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Hotel"
-    CHILD_OWNER="", CHILD_TABLE="Room"
-    P2C_VERB_PHRASE="Have", C2P_VERB_PHRASE="",
-    FK_CONSTRAINT="R_10", FK_COLUMNS="Hotel_id" */
-    SELECT count(*) INTO NUMROWS
-    FROM Hotel
-    WHERE
-        /* %JoinFKPK(:%New,Hotel," = "," AND") */
-            :new.Hotel_id = Hotel.id;
-    IF (
-        /* %NotnullFK(:%New," IS NOT NULL AND") */
-
-            NUMROWS = 0
-        )
-    THEN
-        raise_application_error(
-                -20002,
-                'Cannot insert Room because Hotel does not exist.'
-            );
-    END IF;
-
-
--- erwin Builtin Trigger
-END;
-/
-
-CREATE  TRIGGER tU_Room AFTER UPDATE ON Room for each row
-    -- erwin Builtin Trigger
--- UPDATE trigger on Room
-DECLARE NUMROWS INTEGER;
-BEGIN
-    /* erwin Builtin Trigger */
-    /* Customer Book Room on child update set null */
-    /* ERWIN_RELATION:CHECKSUM="0001849c", PARENT_OWNER="", PARENT_TABLE="Customer"
-    CHILD_OWNER="", CHILD_TABLE="Room"
-    P2C_VERB_PHRASE="Book", C2P_VERB_PHRASE="",
-    FK_CONSTRAINT="R_13", FK_COLUMNS="Customer_id" */
-    /* Not Implemented due to an ORA-04091 Mutating Table Issue */
-    NULL;
-
-    /* erwin Builtin Trigger */
-    /* Hotel Have Room on child update restrict */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Hotel"
-      CHILD_OWNER="", CHILD_TABLE="Room"
-      P2C_VERB_PHRASE="Have", C2P_VERB_PHRASE="",
-      FK_CONSTRAINT="R_10", FK_COLUMNS="Hotel_id" */
-    SELECT count(*) INTO NUMROWS
-    FROM Hotel
-    WHERE
-        /* %JoinFKPK(:%New,Hotel," = "," AND") */
-            :new.Hotel_id = Hotel.id;
-    IF (
-        /* %NotnullFK(:%New," IS NOT NULL AND") */
-
-            NUMROWS = 0
-        )
-    THEN
-        raise_application_error(
-                -20007,
-                'Cannot update Room because Hotel does not exist.'
-            );
-    END IF;
-
-
--- erwin Builtin Trigger
-END;
-/
-
-
-CREATE  TRIGGER tI_Seat BEFORE INSERT ON Seat for each row
-    -- erwin Builtin Trigger
--- INSERT trigger on Seat
-DECLARE NUMROWS INTEGER;
-BEGIN
-    /* erwin Builtin Trigger */
-    /* Customer Book Seat on child insert set null */
-    /* ERWIN_RELATION:CHECKSUM="0001e839", PARENT_OWNER="", PARENT_TABLE="Customer"
-    CHILD_OWNER="", CHILD_TABLE="Seat"
-    P2C_VERB_PHRASE="Book", C2P_VERB_PHRASE="",
-    FK_CONSTRAINT="R_12", FK_COLUMNS="Customer_id" */
-    UPDATE Seat
-    SET
-        /* %SetFK(Seat,NULL) */
-        Seat.Customer_id = NULL
-    WHERE
-        NOT EXISTS (
-                SELECT * FROM Customer
-                WHERE
-                    /* %JoinFKPK(:%New,Customer," = "," AND") */
-                        :new.Customer_id = Customer.id
-            )
-        /* %JoinPKPK(Seat,:%New," = "," AND") */
-      and Seat.id = :new.id AND
-            Seat.Flight_id = :new.Flight_id;
-
-    /* erwin Builtin Trigger */
-    /* Flight Have Seat on child insert restrict */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Flight"
-    CHILD_OWNER="", CHILD_TABLE="Seat"
-    P2C_VERB_PHRASE="Have", C2P_VERB_PHRASE="",
-    FK_CONSTRAINT="R_11", FK_COLUMNS="Flight_id" */
-    SELECT count(*) INTO NUMROWS
-    FROM Flight
-    WHERE
-        /* %JoinFKPK(:%New,Flight," = "," AND") */
-            :new.Flight_id = Flight.id;
-    IF (
-        /* %NotnullFK(:%New," IS NOT NULL AND") */
-
-            NUMROWS = 0
-        )
-    THEN
-        raise_application_error(
-                -20002,
-                'Cannot insert Seat because Flight does not exist.'
-            );
-    END IF;
-
-
--- erwin Builtin Trigger
-END;
-/
-
-CREATE  TRIGGER tU_Seat AFTER UPDATE ON Seat for each row
-    -- erwin Builtin Trigger
--- UPDATE trigger on Seat
-DECLARE NUMROWS INTEGER;
-BEGIN
-    /* erwin Builtin Trigger */
-    /* Customer Book Seat on child update set null */
-    /* ERWIN_RELATION:CHECKSUM="00017de2", PARENT_OWNER="", PARENT_TABLE="Customer"
-    CHILD_OWNER="", CHILD_TABLE="Seat"
-    P2C_VERB_PHRASE="Book", C2P_VERB_PHRASE="",
-    FK_CONSTRAINT="R_12", FK_COLUMNS="Customer_id" */
-    /* Not Implemented due to an ORA-04091 Mutating Table Issue */
-    NULL;
-
-    /* erwin Builtin Trigger */
-    /* Flight Have Seat on child update restrict */
-    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Flight"
-      CHILD_OWNER="", CHILD_TABLE="Seat"
-      P2C_VERB_PHRASE="Have", C2P_VERB_PHRASE="",
-      FK_CONSTRAINT="R_11", FK_COLUMNS="Flight_id" */
-    SELECT count(*) INTO NUMROWS
-    FROM Flight
-    WHERE
-        /* %JoinFKPK(:%New,Flight," = "," AND") */
-            :new.Flight_id = Flight.id;
-    IF (
-        /* %NotnullFK(:%New," IS NOT NULL AND") */
-
-            NUMROWS = 0
-        )
-    THEN
-        raise_application_error(
-                -20007,
-                'Cannot update Seat because Flight does not exist.'
-            );
-    END IF;
-
-
--- erwin Builtin Trigger
-END;
-/
-
-
 CREATE  TRIGGER  tD_Tour AFTER DELETE ON Tour for each row
     -- erwin Builtin Trigger
 -- DELETE trigger on Tour
@@ -1133,6 +875,44 @@ END;
 /
 
 
+CREATE  TRIGGER  tD_TourEnrollment AFTER DELETE ON TourEnrollment for each row
+    -- erwin Builtin Trigger
+-- DELETE trigger on TourEnrollment
+DECLARE NUMROWS INTEGER;
+BEGIN
+    /* erwin Builtin Trigger */
+    /* TourEnrollment  Seat on parent delete set null */
+    /* ERWIN_RELATION:CHECKSUM="00015581", PARENT_OWNER="", PARENT_TABLE="TourEnrollment"
+    CHILD_OWNER="", CHILD_TABLE="Seat"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
+    FK_CONSTRAINT="R_12", FK_COLUMNS="TE_id" */
+    UPDATE Seat
+    SET
+        /* %SetFK(Seat,NULL) */
+        Seat.TE_id = NULL
+    WHERE
+        /* %JoinFKPK(Seat,:%Old," = "," AND") */
+            Seat.TE_id = :old.id;
+
+    /* erwin Builtin Trigger */
+    /* TourEnrollment  Room on parent delete set null */
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="TourEnrollment"
+    CHILD_OWNER="", CHILD_TABLE="Room"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
+    FK_CONSTRAINT="R_11", FK_COLUMNS="TE_id" */
+    UPDATE Room
+    SET
+        /* %SetFK(Room,NULL) */
+        Room.TE_id = NULL
+    WHERE
+        /* %JoinFKPK(Room,:%Old," = "," AND") */
+            Room.TE_id = :old.id;
+
+
+-- erwin Builtin Trigger
+END;
+/
+
 CREATE  TRIGGER tI_TourEnrollment BEFORE INSERT ON TourEnrollment for each row
     -- erwin Builtin Trigger
 -- INSERT trigger on TourEnrollment
@@ -1194,9 +974,45 @@ CREATE  TRIGGER tU_TourEnrollment AFTER UPDATE ON TourEnrollment for each row
 -- UPDATE trigger on TourEnrollment
 DECLARE NUMROWS INTEGER;
 BEGIN
+    /* TourEnrollment  Seat on parent update set null */
+    /* ERWIN_RELATION:CHECKSUM="00037aa4", PARENT_OWNER="", PARENT_TABLE="TourEnrollment"
+      CHILD_OWNER="", CHILD_TABLE="Seat"
+      P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
+      FK_CONSTRAINT="R_12", FK_COLUMNS="TE_id" */
+    IF
+        /* %JoinPKPK(:%Old,:%New," <> "," OR ") */
+            :old.id <> :new.id
+    THEN
+        UPDATE Seat
+        SET
+            /* %SetFK(Seat,NULL) */
+            Seat.TE_id = NULL
+        WHERE
+            /* %JoinFKPK(Seat,:%Old," = ",",") */
+                Seat.TE_id = :old.id;
+    END IF;
+
+    /* TourEnrollment  Room on parent update set null */
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="TourEnrollment"
+      CHILD_OWNER="", CHILD_TABLE="Room"
+      P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
+      FK_CONSTRAINT="R_11", FK_COLUMNS="TE_id" */
+    IF
+        /* %JoinPKPK(:%Old,:%New," <> "," OR ") */
+            :old.id <> :new.id
+    THEN
+        UPDATE Room
+        SET
+            /* %SetFK(Room,NULL) */
+            Room.TE_id = NULL
+        WHERE
+            /* %JoinFKPK(Room,:%Old," = ",",") */
+                Room.TE_id = :old.id;
+    END IF;
+
     /* erwin Builtin Trigger */
     /* Tour  TourEnrollment on child update restrict */
-    /* ERWIN_RELATION:CHECKSUM="0001ebcf", PARENT_OWNER="", PARENT_TABLE="Tour"
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Tour"
       CHILD_OWNER="", CHILD_TABLE="TourEnrollment"
       P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
       FK_CONSTRAINT="R_21", FK_COLUMNS="Tour_id" */
@@ -1246,21 +1062,216 @@ END;
 /
 
 
+CREATE  TRIGGER tI_Room BEFORE INSERT ON Room for each row
+    -- erwin Builtin Trigger
+-- INSERT trigger on Room
+DECLARE NUMROWS INTEGER;
+BEGIN
+    /* erwin Builtin Trigger */
+    /* TourEnrollment  Room on child insert set null */
+    /* ERWIN_RELATION:CHECKSUM="0001d32f", PARENT_OWNER="", PARENT_TABLE="TourEnrollment"
+    CHILD_OWNER="", CHILD_TABLE="Room"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
+    FK_CONSTRAINT="R_11", FK_COLUMNS="TE_id" */
+    UPDATE Room
+    SET
+        /* %SetFK(Room,NULL) */
+        Room.TE_id = NULL
+    WHERE
+        NOT EXISTS (
+                SELECT * FROM TourEnrollment
+                WHERE
+                    /* %JoinFKPK(:%New,TourEnrollment," = "," AND") */
+                        :new.TE_id = TourEnrollment.id
+            )
+        /* %JoinPKPK(Room,:%New," = "," AND") */
+      and Room.id = :new.id AND
+            Room.Hotel_id = :new.Hotel_id;
+
+    /* erwin Builtin Trigger */
+    /* Hotel Have Room on child insert restrict */
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Hotel"
+    CHILD_OWNER="", CHILD_TABLE="Room"
+    P2C_VERB_PHRASE="Have", C2P_VERB_PHRASE="",
+    FK_CONSTRAINT="R_10", FK_COLUMNS="Hotel_id" */
+    SELECT count(*) INTO NUMROWS
+    FROM Hotel
+    WHERE
+        /* %JoinFKPK(:%New,Hotel," = "," AND") */
+            :new.Hotel_id = Hotel.id;
+    IF (
+        /* %NotnullFK(:%New," IS NOT NULL AND") */
+
+            NUMROWS = 0
+        )
+    THEN
+        raise_application_error(
+                -20002,
+                'Cannot insert Room because Hotel does not exist.'
+            );
+    END IF;
+
+
+-- erwin Builtin Trigger
+END;
+/
+
+CREATE  TRIGGER tU_Room AFTER UPDATE ON Room for each row
+    -- erwin Builtin Trigger
+-- UPDATE trigger on Room
+DECLARE NUMROWS INTEGER;
+BEGIN
+    /* erwin Builtin Trigger */
+    /* TourEnrollment  Room on child update set null */
+    /* ERWIN_RELATION:CHECKSUM="0001793d", PARENT_OWNER="", PARENT_TABLE="TourEnrollment"
+    CHILD_OWNER="", CHILD_TABLE="Room"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
+    FK_CONSTRAINT="R_11", FK_COLUMNS="TE_id" */
+    /* Not Implemented due to an ORA-04091 Mutating Table Issue */
+    NULL;
+
+    /* erwin Builtin Trigger */
+    /* Hotel Have Room on child update restrict */
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Hotel"
+      CHILD_OWNER="", CHILD_TABLE="Room"
+      P2C_VERB_PHRASE="Have", C2P_VERB_PHRASE="",
+      FK_CONSTRAINT="R_10", FK_COLUMNS="Hotel_id" */
+    SELECT count(*) INTO NUMROWS
+    FROM Hotel
+    WHERE
+        /* %JoinFKPK(:%New,Hotel," = "," AND") */
+            :new.Hotel_id = Hotel.id;
+    IF (
+        /* %NotnullFK(:%New," IS NOT NULL AND") */
+
+            NUMROWS = 0
+        )
+    THEN
+        raise_application_error(
+                -20007,
+                'Cannot update Room because Hotel does not exist.'
+            );
+    END IF;
+
+
+-- erwin Builtin Trigger
+END;
+/
+
+
+CREATE  TRIGGER tI_Seat BEFORE INSERT ON Seat for each row
+    -- erwin Builtin Trigger
+-- INSERT trigger on Seat
+DECLARE NUMROWS INTEGER;
+BEGIN
+    /* erwin Builtin Trigger */
+    /* TourEnrollment  Seat on child insert set null */
+    /* ERWIN_RELATION:CHECKSUM="0001e5a5", PARENT_OWNER="", PARENT_TABLE="TourEnrollment"
+    CHILD_OWNER="", CHILD_TABLE="Seat"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
+    FK_CONSTRAINT="R_12", FK_COLUMNS="TE_id" */
+    UPDATE Seat
+    SET
+        /* %SetFK(Seat,NULL) */
+        Seat.TE_id = NULL
+    WHERE
+        NOT EXISTS (
+                SELECT * FROM TourEnrollment
+                WHERE
+                    /* %JoinFKPK(:%New,TourEnrollment," = "," AND") */
+                        :new.TE_id = TourEnrollment.id
+            )
+        /* %JoinPKPK(Seat,:%New," = "," AND") */
+      and Seat.id = :new.id AND
+            Seat.Flight_id = :new.Flight_id;
+
+    /* erwin Builtin Trigger */
+    /* Flight Have Seat on child insert restrict */
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Flight"
+    CHILD_OWNER="", CHILD_TABLE="Seat"
+    P2C_VERB_PHRASE="Have", C2P_VERB_PHRASE="",
+    FK_CONSTRAINT="R_11", FK_COLUMNS="Flight_id" */
+    SELECT count(*) INTO NUMROWS
+    FROM Flight
+    WHERE
+        /* %JoinFKPK(:%New,Flight," = "," AND") */
+            :new.Flight_id = Flight.id;
+    IF (
+        /* %NotnullFK(:%New," IS NOT NULL AND") */
+
+            NUMROWS = 0
+        )
+    THEN
+        raise_application_error(
+                -20002,
+                'Cannot insert Seat because Flight does not exist.'
+            );
+    END IF;
+
+
+-- erwin Builtin Trigger
+END;
+/
+
+CREATE  TRIGGER tU_Seat AFTER UPDATE ON Seat for each row
+    -- erwin Builtin Trigger
+-- UPDATE trigger on Seat
+DECLARE NUMROWS INTEGER;
+BEGIN
+    /* erwin Builtin Trigger */
+    /* TourEnrollment  Seat on child update set null */
+    /* ERWIN_RELATION:CHECKSUM="00017817", PARENT_OWNER="", PARENT_TABLE="TourEnrollment"
+    CHILD_OWNER="", CHILD_TABLE="Seat"
+    P2C_VERB_PHRASE="", C2P_VERB_PHRASE="",
+    FK_CONSTRAINT="R_12", FK_COLUMNS="TE_id" */
+    /* Not Implemented due to an ORA-04091 Mutating Table Issue */
+    NULL;
+
+    /* erwin Builtin Trigger */
+    /* Flight Have Seat on child update restrict */
+    /* ERWIN_RELATION:CHECKSUM="00000000", PARENT_OWNER="", PARENT_TABLE="Flight"
+      CHILD_OWNER="", CHILD_TABLE="Seat"
+      P2C_VERB_PHRASE="Have", C2P_VERB_PHRASE="",
+      FK_CONSTRAINT="R_11", FK_COLUMNS="Flight_id" */
+    SELECT count(*) INTO NUMROWS
+    FROM Flight
+    WHERE
+        /* %JoinFKPK(:%New,Flight," = "," AND") */
+            :new.Flight_id = Flight.id;
+    IF (
+        /* %NotnullFK(:%New," IS NOT NULL AND") */
+
+            NUMROWS = 0
+        )
+    THEN
+        raise_application_error(
+                -20007,
+                'Cannot update Seat because Flight does not exist.'
+            );
+    END IF;
+
+
+-- erwin Builtin Trigger
+END;
+/
+
 
 CREATE TRIGGER tour_cost_check
-    BEFORE INSERT OR UPDATE ON TourEnrollment
+    BEFORE UPDATE ON TourEnrollment
     for each row
-DECLARE MinTourCost DECIMAL(19,4);
+DECLARE
+    pragma autonomous_transaction;
+    MinTourCost DECIMAL(19,4);
 BEGIN
     SELECT SC+RC+VC+TC+NVL(:new.NEED_INSURANCE*100,0) INTO MinTourCost
     FROM (
              SELECT NVL(SUM(S.COST), 0) SC
-             FROM SEAT S JOIN FLIGHT F on S.FLIGHT_ID = F.ID JOIN CITY C on F.CITY_ID = C.ID JOIN TOUR T on C.COUNTRY_ID = T.COUNTRY_ID
-             WHERE S.CUSTOMER_ID = :new.CUSTOMER_ID AND T.ID = :new.TOUR_ID
+             FROM SEAT S JOIN TOURENROLLMENT TE on S.TE_ID = TE.ID
+             WHERE S.TE_ID = :new.ID
          ), (
              SELECT NVL(SUM(R.LIVING_COST*(T.END_DATE-T.START_DATE)),0) RC
-             FROM ROOM R JOIN TOURENROLLMENT TE on R.CUSTOMER_ID = TE.CUSTOMER_ID JOIN TOUR T on TE.TOUR_ID = T.ID
-             WHERE R.CUSTOMER_ID = :new.CUSTOMER_ID AND T.ID = :new.TOUR_ID
+             FROM ROOM R JOIN TOURENROLLMENT TE on R.TE_ID = TE.ID JOIN TOUR T on TE.TOUR_ID = T.ID
+             WHERE R.TE_ID = :new.ID
          ), (
              SELECT NVL(SUM(:new.NEED_VISA*CN.VISA_COST),0) VC
              FROM TOUR T JOIN COUNTRY CN on T.COUNTRY_ID = CN.ID
@@ -1268,7 +1279,7 @@ BEGIN
          ), (
              SELECT NVL(SUM(:new.NEED_TRANSFER*H.TRANSFER_COST),0) TC
              FROM ROOM R JOIN HOTEL H on R.HOTEL_ID = H.ID JOIN CITY C on H.CITY_ID = C.ID JOIN TOUR T on C.COUNTRY_ID = T.COUNTRY_ID
-             WHERE R.CUSTOMER_ID = :new.CUSTOMER_ID AND T.ID = :new.TOUR_ID
+             WHERE R.TE_ID = :new.ID
          );
     IF (NVL(:new.COST,0) < MinTourCost) THEN
         raise_application_error(-20000, 'Tour cost should be not less than sum of all other costs');
@@ -1276,9 +1287,8 @@ BEGIN
 END;
 
 
-
 CREATE TRIGGER hotel_country_check
-    BEFORE INSERT OR UPDATE ON Room
+    BEFORE UPDATE ON Room
     for each row
 DECLARE
     TourCountry INTEGER;
@@ -1286,7 +1296,7 @@ DECLARE
 BEGIN
     SELECT T.COUNTRY_ID INTO TourCountry
     FROM TOURENROLLMENT TE JOIN TOUR T on TE.TOUR_ID = T.ID
-    WHERE TE.CUSTOMER_ID = :new.CUSTOMER_ID;
+    WHERE TE.ID = :new.TE_ID;
     SELECT C.COUNTRY_ID INTO HotelCountry
     FROM HOTEL H JOIN CITY C on H.CITY_ID = C.ID
     WHERE H.ID = :new.HOTEL_ID;
@@ -1296,4 +1306,23 @@ BEGIN
 END;
 
 
-
+CREATE TRIGGER tour_availability_check
+    BEFORE INSERT ON TourEnrollment
+    for each row
+DECLARE
+    numAvailableSeats INTEGER;
+    numAvailableRooms INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO numAvailableSeats
+    FROM SEAT S JOIN FLIGHT F on S.FLIGHT_ID = F.ID JOIN CITY C on F.CITY_ID = C.ID JOIN TOUR T on C.COUNTRY_ID = T.COUNTRY_ID
+    WHERE :new.TOUR_ID = T.ID;
+    SELECT COUNT(*) INTO numAvailableRooms
+    FROM ROOM R JOIN HOTEL H on R.HOTEL_ID = H.ID JOIN CITY C on H.CITY_ID = C.ID JOIN TOUR T on C.COUNTRY_ID = T.COUNTRY_ID
+    WHERE :new.TOUR_ID = T.ID;
+    IF (numAvailableSeats < 1) THEN
+        raise_application_error(-20000, 'No available seats for this tour');
+    END IF;
+    IF (numAvailableRooms < 1) THEN
+        raise_application_error(-20000, 'No available rooms for this tour');
+    END IF;
+END;
