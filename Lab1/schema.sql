@@ -48,7 +48,8 @@ CREATE TABLE Customer
     id                   INT NOT NULL ,
     Name                 CHAR(18) NULL ,
     Address              CHAR(18) NULL ,
-    Passport             CHAR(18) NULL CONSTRAINT PassportConstraint CHECK ( NOT REGEXP_LIKE(Passport,'^[[A-Z]{2}[0-9]{7}]$') )
+    Passport             CHAR(18) NULL ,
+    CONSTRAINT Passport_1941159630 CHECK ( NOT REGEXP_LIKE(Passport,'^[[A-Z]{2}[0-9]{7}]$') )
 );
 
 CREATE UNIQUE INDEX XPKCustomer ON Customer
@@ -63,7 +64,7 @@ CREATE TABLE Flight
     City_id              INT NOT NULL ,
     Leave_Date           DATE NOT NULL ,
     Return_Date          DATE NOT NULL ,
-    CONSTRAINT FlightDateConstraint CHECK ( Leave_Date < Return_Date )
+    CONSTRAINT FlightDateRule_1356924654 CHECK ( Leave_Date < Return_Date )
 );
 
 CREATE UNIQUE INDEX XPKFlight ON Flight
@@ -76,10 +77,10 @@ CREATE TABLE Hotel
 (
     id                   INT NOT NULL ,
     City_id              INT NOT NULL ,
-    Name                 CHAR(18) NOT NULL ,
     Address              CHAR(18) NULL ,
     Stars                INTEGER NULL  CONSTRAINT  HotelStarsConstraint CHECK (Stars IN (1, 2, 3, 4, 5)),
-    Transfer_Cost        DECIMAL(19,4) NOT NULL  CONSTRAINT  TransferCostConstraint CHECK (Transfer_Cost >= 0)
+    Transfer_Cost        DECIMAL(19,4) NOT NULL  CONSTRAINT  TransferCostConstraint CHECK (Transfer_Cost >= 0),
+    Name                 CHAR(18) NULL
 );
 
 CREATE UNIQUE INDEX XPKHotel ON Hotel
@@ -140,7 +141,8 @@ CREATE TABLE TourEnrollment
     Need_Visa            SMALLINT NULL ,
     Need_Transfer        SMALLINT NULL ,
     Need_Insurance       SMALLINT NULL ,
-    id                   INT NOT NULL
+    id                   INT NOT NULL ,
+    Cost                 DECIMAL(19,4) NOT NULL
 );
 
 CREATE UNIQUE INDEX XPKTourEnrollment ON TourEnrollment
@@ -1242,4 +1244,56 @@ BEGIN
 -- erwin Builtin Trigger
 END;
 /
+
+
+
+CREATE TRIGGER tour_cost_check
+    BEFORE INSERT OR UPDATE ON TourEnrollment
+    for each row
+DECLARE MinTourCost DECIMAL(19,4);
+BEGIN
+    SELECT SC+RC+VC+TC+NVL(:new.NEED_INSURANCE*100,0) INTO MinTourCost
+    FROM (
+             SELECT NVL(SUM(S.COST), 0) SC
+             FROM SEAT S JOIN FLIGHT F on S.FLIGHT_ID = F.ID JOIN CITY C on F.CITY_ID = C.ID JOIN TOUR T on C.COUNTRY_ID = T.COUNTRY_ID
+             WHERE S.CUSTOMER_ID = :new.CUSTOMER_ID AND T.ID = :new.TOUR_ID
+         ), (
+             SELECT NVL(SUM(R.LIVING_COST*(T.END_DATE-T.START_DATE)),0) RC
+             FROM ROOM R JOIN TOURENROLLMENT TE on R.CUSTOMER_ID = TE.CUSTOMER_ID JOIN TOUR T on TE.TOUR_ID = T.ID
+             WHERE R.CUSTOMER_ID = :new.CUSTOMER_ID AND T.ID = :new.TOUR_ID
+         ), (
+             SELECT NVL(SUM(:new.NEED_VISA*CN.VISA_COST),0) VC
+             FROM TOUR T JOIN COUNTRY CN on T.COUNTRY_ID = CN.ID
+             WHERE T.ID = :new.TOUR_ID
+         ), (
+             SELECT NVL(SUM(:new.NEED_TRANSFER*H.TRANSFER_COST),0) TC
+             FROM ROOM R JOIN HOTEL H on R.HOTEL_ID = H.ID JOIN CITY C on H.CITY_ID = C.ID JOIN TOUR T on C.COUNTRY_ID = T.COUNTRY_ID
+             WHERE R.CUSTOMER_ID = :new.CUSTOMER_ID AND T.ID = :new.TOUR_ID
+         );
+    IF (NVL(:new.COST,0) < MinTourCost) THEN
+        raise_application_error(-20000, 'Tour cost should be not less than sum of all other costs');
+    END IF;
+END;
+
+
+
+CREATE TRIGGER hotel_country_check
+    BEFORE INSERT OR UPDATE ON Room
+    for each row
+DECLARE
+    TourCountry INTEGER;
+    HotelCountry INTEGER;
+BEGIN
+    SELECT T.COUNTRY_ID INTO TourCountry
+    FROM TOURENROLLMENT TE JOIN TOUR T on TE.TOUR_ID = T.ID
+    WHERE TE.CUSTOMER_ID = :new.CUSTOMER_ID;
+    SELECT C.COUNTRY_ID INTO HotelCountry
+    FROM HOTEL H JOIN CITY C on H.CITY_ID = C.ID
+    WHERE H.ID = :new.HOTEL_ID;
+    IF (HotelCountry <> TourCountry) THEN
+        raise_application_error(-20000, 'Hotel must be located in tour country');
+    END IF;
+END;
+
+
 
