@@ -1315,10 +1315,10 @@ DECLARE
 BEGIN
     SELECT COUNT(*) INTO numAvailableSeats
     FROM SEAT S JOIN FLIGHT F on S.FLIGHT_ID = F.ID JOIN CITY C on F.CITY_ID = C.ID JOIN TOUR T on C.COUNTRY_ID = T.COUNTRY_ID
-    WHERE :new.TOUR_ID = T.ID;
+    WHERE :new.TOUR_ID = T.ID AND S.TE_ID IS NULL;
     SELECT COUNT(*) INTO numAvailableRooms
     FROM ROOM R JOIN HOTEL H on R.HOTEL_ID = H.ID JOIN CITY C on H.CITY_ID = C.ID JOIN TOUR T on C.COUNTRY_ID = T.COUNTRY_ID
-    WHERE :new.TOUR_ID = T.ID;
+    WHERE :new.TOUR_ID = T.ID AND R.TE_ID IS NULL;
     IF (numAvailableSeats < 1) THEN
         raise_application_error(-20000, 'No available seats for this tour');
     END IF;
