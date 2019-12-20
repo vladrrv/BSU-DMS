@@ -4,7 +4,7 @@ DROP TABLE EMP;
 DROP TABLE DEPT;
 DROP TABLE JOB;
 /******************************************************/
-/*          ïîäğàçäåëåíèÿ                             */
+/*          Ğ¿Ğ¾Ğ´Ñ€Ğ°Ğ·Ğ´ĞµĞ»ĞµĞ½Ğ¸Ñ                             */
 /******************************************************/
 create table dept (deptid varchar (3) primary key not null, deptname varchar (20) not null,
                    deptaddress varchar(25) not null);
@@ -22,7 +22,7 @@ insert into dept values ('U04', 'Operations', 'USA, Boston');
 insert into dept values ('B05', 'Production', 'Belarus, Minsk');
 commit;
 /******************************************************/
-/*          ğàáîòíèêè                                 */
+/*          Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ½Ğ¸ĞºĞ¸                                 */
 /******************************************************/
 create table emp (empno integer primary key not null, empname varchar (15) not null,
                   birthdate date not null  check (birthdate>to_date('01-01-1954','dd-mm-yyyy')));
@@ -59,7 +59,7 @@ insert into emp values (505, 'Fedor Dikunov', to_date('12.07.1965','dd-mm-yyyy')
 insert into emp values (601, 'Anna Zlotnik', to_date('18.05.1979','dd-mm-yyyy'));
 commit;
 /******************************************************/
-/*          äîëæíîñòè                                 */
+/*          Ğ´Ğ¾Ğ»Ğ¶Ğ½Ğ¾ÑÑ‚Ğ¸                                 */
 /******************************************************/
 create table job (jobno integer primary key not null, jobname varchar(20) not null,
                   minsalary real not null);
@@ -76,7 +76,7 @@ insert into job values (1008, 'Programmer', 7500);
 insert into job values (1009, 'Accountant',5500);
 commit;
 /******************************************************/
-/*          ñëóæåáíàÿ êàğüåğà                         */
+/*          ÑĞ»ÑƒĞ¶ĞµĞ±Ğ½Ğ°Ñ ĞºĞ°Ñ€ÑŒĞµÑ€Ğ°                         */
 /******************************************************/
 create table career (jobno integer references job(jobno) not null ,
                      empno integer references emp(empno) not null, deptid varchar(3) references dept(deptid) not null,
@@ -129,88 +129,83 @@ insert into career values  (1006, 505, 'B01', to_date('01.06.2007','dd-mm-yyyy')
 insert into career values  (1007, 601, 'B05', to_date('01.07.2013','dd-mm-yyyy'), null);
 commit;
 /******************************************************/
-/*         ïğåìèÿ                     */
+/*         Ğ¿Ñ€ĞµĞ¼Ğ¸Ñ                     */
 /******************************************************/
-create table bonus (empno integer references emp(empno) not null, month smallint check(month>0 and month<13), year integer check(year>2013 and year<2019), bonvalue real);
+create table bonus (empno integer references emp(empno) not null, month smallint check(month>0 and month<13), year integer check(year>2013 and year<2020), bonvalue real, tax real);
 commit;
-insert into bonus values (505, 1, 2014, 500);
-insert into bonus values (505, 2, 2014, 500);
-insert into bonus values (404, 3, 2014, 300);
-insert into bonus values (404, 5, 2014, 300);
-insert into bonus values (102, 4, 2014, 300);
-insert into bonus values (102, 5, 2014, 300);
-insert into bonus values (102, 9, 2014, 1000);
-insert into bonus values (303, 6, 2014, 300);
-insert into bonus values (504, 7, 2014, 100);
-insert into bonus values (412, 7, 2014, 400);
-insert into bonus values (412, 8, 2014, 400);
-insert into bonus values (412,12, 2014, 400);
-insert into bonus values (601, 9, 2014, 200);
-insert into bonus values (601,12, 2014, 200);
-insert into bonus values (414,10, 2014, 350);
-insert into bonus values (321,11, 2014, 350);
-insert into bonus values (322,12, 2014, 350);
-insert into bonus values (401,12, 2014, 350);
+insert into bonus values (505, 1, 2014, 500, Null);
+insert into bonus values (505, 2, 2014, 500, Null);
+insert into bonus values (404, 3, 2014, 300, Null);
+insert into bonus values (404, 5, 2014, 300, Null);
+insert into bonus values (102, 4, 2014, 300, Null);
+insert into bonus values (102, 5, 2014, 300, Null);
+insert into bonus values (102, 9, 2014, 1000, Null);
+insert into bonus values (303, 6, 2014, 300, Null);
+insert into bonus values (504, 7, 2014, 100, Null);
+insert into bonus values (412, 7, 2014, 400, Null);
+insert into bonus values (412, 8, 2014, 400, Null);
+insert into bonus values (412,12, 2014, 400, Null);
+insert into bonus values (601, 9, 2014, 200, Null);
+insert into bonus values (601,12, 2014, 200, Null);
+insert into bonus values (414,10, 2014, 350, Null);
+insert into bonus values (321,11, 2014, 350, Null);
+insert into bonus values (322,12, 2014, 350, Null);
+insert into bonus values (401,12, 2014, 350, Null);
 /****************************/
-insert into bonus values (102, 1, 2015, 500);
-insert into bonus values (505, 2, 2015, 500);
-insert into bonus values (102, 3, 2015, 500);
-insert into bonus values (404, 4, 2015, 300);
-insert into bonus values (504, 5, 2015, 150);
-insert into bonus values (412, 6, 2015, 300);
-insert into bonus values (601, 7, 2015, 250);
-insert into bonus values (321, 8, 2015, 300);
-insert into bonus values (322, 9, 2015, 300);
-insert into bonus values (403,10, 2015, 400);
-insert into bonus values (402,11, 2015, 450);
-insert into bonus values (403,12, 2015, 200);
+insert into bonus values (102, 1, 2015, 500, Null);
+insert into bonus values (505, 2, 2015, 500, Null);
+insert into bonus values (102, 3, 2015, 500, Null);
+insert into bonus values (404, 4, 2015, 300, Null);
+insert into bonus values (504, 5, 2015, 150, Null);
+insert into bonus values (412, 6, 2015, 300, Null);
+insert into bonus values (601, 7, 2015, 250, Null);
+insert into bonus values (321, 8, 2015, 300, Null);
+insert into bonus values (322, 9, 2015, 300, Null);
+insert into bonus values (403,10, 2015, 400, Null);
+insert into bonus values (402,11, 2015, 450, Null);
+insert into bonus values (403,12, 2015, 200, Null);
 /*****************************/
-insert into bonus values (505, 1, 2016, 500);
-insert into bonus values (102, 2, 2016, 500);
-insert into bonus values (329, 3, 2016, 400);
-insert into bonus values (401, 4, 2016, 300);
-insert into bonus values (402, 5, 2016, 400);
-insert into bonus values (403, 6, 2016, 350);
-insert into bonus values (329, 5, 2016, 400);
-insert into bonus values (403, 7, 2016, 400);
-insert into bonus values (327, 7, 2016, 250);
-insert into bonus values (303, 8, 2016, 450);
-insert into bonus values (101, 9, 2016, 350);
-insert into bonus values (504, 3, 2016, 150);
-insert into bonus values (401,11, 2016, 200);
-insert into bonus values (303,12, 2016, 350);
+insert into bonus values (505, 1, 2016, 500, Null);
+insert into bonus values (102, 2, 2016, 500, Null);
+insert into bonus values (329, 3, 2016, 400, Null);
+insert into bonus values (401, 4, 2016, 300, Null);
+insert into bonus values (402, 5, 2016, 400, Null);
+insert into bonus values (403, 6, 2016, 350, Null);
+insert into bonus values (329, 5, 2016, 400, Null);
+insert into bonus values (403, 7, 2016, 400, Null);
+insert into bonus values (327, 7, 2016, 250, Null);
+insert into bonus values (303, 8, 2016, 450, Null);
+insert into bonus values (101, 9, 2016, 350, Null);
+insert into bonus values (504, 3, 2016, 150, Null);
+insert into bonus values (401,11, 2016, 200, Null);
+insert into bonus values (303,12, 2016, 350, Null);
 /*************************/
-insert into bonus values (505, 1, 2017, 500);
-insert into bonus values (102, 1, 2017, 350);
-insert into bonus values (327, 2, 2017, 350);
-insert into bonus values (103, 2, 2017, 350);
-insert into bonus values (211, 3, 2017, 350);
-insert into bonus values (503,10, 2017, 350);
-insert into bonus values (503, 5, 2017, 350);
-insert into bonus values (505, 6, 2017, 300);
-insert into bonus values (211, 7, 2017, 300);
-insert into bonus values (503, 8, 2017, 350);
-insert into bonus values (203, 9, 2017, 300);
-insert into bonus values (211,10, 2017, 300);
-insert into bonus values (401,11, 2017, 300);
-insert into bonus values (403,12, 2017, 350);
-insert into bonus values (101,12, 2017, 350);
+insert into bonus values (505, 1, 2017, 500, Null);
+insert into bonus values (102, 1, 2017, 350, Null);
+insert into bonus values (327, 2, 2017, 350, Null);
+insert into bonus values (103, 2, 2017, 350, Null);
+insert into bonus values (211, 3, 2017, 350, Null);
+insert into bonus values (503,10, 2017, 350, Null);
+insert into bonus values (503, 5, 2017, 350, Null);
+insert into bonus values (505, 6, 2017, 300, Null);
+insert into bonus values (211, 7, 2017, 300, Null);
+insert into bonus values (503, 8, 2017, 350, Null);
+insert into bonus values (203, 9, 2017, 300, Null);
+insert into bonus values (211,10, 2017, 300, Null);
+insert into bonus values (401,11, 2017, 300, Null);
+insert into bonus values (403,12, 2017, 350, Null);
+insert into bonus values (101,12, 2017, 350, Null);
 /*************************/
-insert into bonus values (505, 1, 2018, 500);
-insert into bonus values (102, 1, 2018, 500);
-insert into bonus values (102, 2, 2018, 500);
-insert into bonus values (401, 3, 2018, 600);
-insert into bonus values (402, 3, 2018, 600);
-insert into bonus values (403, 4, 2018, 700);
-insert into bonus values (104, 5, 2018, 500);
-insert into bonus values (103, 6, 2018, 500);
-insert into bonus values (102, 6, 2018, 500);
-insert into bonus values (203, 7, 2018, 500);
-insert into bonus values (205, 8, 2018, 300);
+insert into bonus values (505, 1, 2018, 500, Null);
+insert into bonus values (102, 1, 2018, 500, Null);
+insert into bonus values (102, 2, 2018, 500, Null);
+insert into bonus values (401, 3, 2018, 600, Null);
+insert into bonus values (402, 3, 2018, 600, Null);
+insert into bonus values (403, 4, 2018, 700, Null);
+insert into bonus values (104, 5, 2018, 500, Null);
+insert into bonus values (103, 6, 2018, 500, Null);
+insert into bonus values (102, 6, 2018, 500, Null);
+insert into bonus values (203, 7, 2018, 500, Null);
+insert into bonus values (205, 8, 2018, 300, Null);
 commit;
 
-
-   
-
-
- 
